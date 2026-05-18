@@ -1,0 +1,35 @@
+[project]
+name = "akt-tool"
+version = "0.1.0"
+description = "All Key Tool tracker by Ichak21"
+authors = [
+    {name = "Ichak", email = "ichakhari@gmail.com"}
+]
+license = "MIT"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "sqlmodel>=0.0.38",
+    "psycopg2-binary>=2.9.12",
+    "httpx>=0.28.1",
+    "beautifulsoup4>=4.14.3",
+    "pandas>=3.0.3",
+    "selenium>=4.44.0",
+    "python-dotenv (>=1.2.2,<2.0.0)"
+]
+
+[tool.poetry]
+package-mode = false
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3"
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+addopts = "-v"
