@@ -18,19 +18,20 @@ from scraper.tool import slugify_name
 # =====================================================================
 
 def _helper_list_and_select_game(session: Session, context_title: str) -> int:
-    """
-    Affiche la liste des jeux et demande à l'utilisateur d'en sélectionner un.
-    Retourne l'ID du jeu ou -1 si le catalogue est vide ou le choix invalide.
-    """
+    """Affiche le catalogue sous forme de tableau scannable et gère la sélection."""
     games = get_all_games(session)
     if not games:
         print("📭 Le catalogue est vide pour le moment.")
         return -1
 
-    print(f"\n--- 📋 SELECTIONNER UN JEU ({context_title}) ---")
+    print(f"\n--- 📋 CATALOGUE DES JEUX ({context_title}) ---")
+    print("-" * 75)
+    print(f"{'ID':<6} | {'Titre du jeu':<35} | {'Plateforme':<12} | {'Statut du scan':<12}")
+    print("-" * 75)
     for g in games:
         status = "🟢 Actif" if g.is_active else "🔴 Inactif"
-        print(f"  [{g.id}] {g.title} ({g.platform.upper()}) - {status}")
+        print(f"{g.id:<6} | {g.title:<35} | {g.platform.upper():<12} | {status:<12}")
+    print("-" * 75)
 
     choice = input("\nEntrez l'ID du jeu ciblé : ").strip()
     try:
@@ -64,8 +65,11 @@ def action_add_game():
         try:
             game = create_tracked_game(session, title=title, platform=platform, slug=slug)
             print(f"✅ Succès ! '{game.title}' ({game.platform.upper()}) est maintenant suivi.")
+        except ValueError as e:
+            # On attrape proprement le message envoyé par le CRUD
+            print(f"⚠️ {e}")
         except Exception as e:
-            print(f"❌ Erreur lors de l'ajout en BDD : {e}")
+            print(f"❌ Erreur critique lors de l'ajout en BDD : {e}")
 
 
 def action_toggle_game_status():
@@ -132,27 +136,33 @@ def action_run_scan_loop():
 
 
 def action_view_history():
-    """Option 5 : Consulter l'historique d'un jeu"""
+    """Option 5 : Consulter l'historique détaillé d'un jeu (Prix + Nombre d'offres)"""
     with Session(engine) as session:
         game_id = _helper_list_and_select_game(session, "VOIR L'HISTORIQUE")
         if game_id == -1:
             return
 
-        game = session.get(get_all_games(session)[0].__class__, game_id)
+        # Récupère l'objet jeu courant pour l'affichage du titre
+        games = get_all_games(session)
+        game = next(g for g in games if g.id == game_id)
+        
         history = get_game_price_history(session, game_id)
         
-        print(f"\n📈 Historique pour '{game.title}' ({game.platform.upper()}) :")
-        print("-" * 50)
-        print(f"{'Date du scan':<25} | {'Prix Minimum':<15}")
-        print("-" * 50)
+        print(f"\n📈 Historique détaillé pour '{game.title}' ({game.platform.upper()}) :")
+        print("-" * 65)
+        print(f"{'Date du scan':<25} | {'Prix Minimum':<15} | {'Offres valides':<15}")
+        print("-" * 65)
         
         if not history:
             print("  Aucun prix enregistré pour le moment.")
         else:
             for snapshot in history:
                 date_str = snapshot.scanned_at.strftime("%Y-%m-%d %H:%M:%S")
-                print(f"{date_str:<25} | {snapshot.min_price:<12} €")
-        print("-" * 50)
+                # Calcule le nombre d'offres stockées dans le JSON
+                nb_offers = len(snapshot.offers_json) if snapshot.offers_json else 0
+                
+                print(f"{date_str:<25} | {snapshot.min_price:<12} € | {nb_offers:<15}")
+        print("-" * 65)
 
 
 # =====================================================================

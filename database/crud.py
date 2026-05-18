@@ -5,20 +5,28 @@ from database.model import TrackedGame, PriceSnapshot
 # =====================================================================
 #  SECTION : GESTION DU CATALOGUE (TrackedGame)
 # =====================================================================
-
 # --- CREATE (Ajout) ---
-
-
 def create_tracked_game(session: Session, title: str, platform: str, slug: str) -> TrackedGame:
     """
-    Ajoute un nouveau jeu au catalogue de suivi.
+    Ajoute un nouveau jeu au catalogue après vérification des doublons.
+    Lève une ValueError si le couple jeu/plateforme existe déjà.
     """
+    # 🚨 La validation est déplacée ici, à la source
+    existing = session.exec(
+        select(TrackedGame).where(
+            TrackedGame.title == title, 
+            TrackedGame.platform == platform
+        )
+    ).first()
+    
+    if existing:
+        raise ValueError(f"Le jeu '{title}' est déjà suivi sur la plateforme '{platform.upper()}'.")
+
     game = TrackedGame(title=title, platform=platform, slug=slug)
     session.add(game)
     session.commit()
     session.refresh(game)
     return game
-
 
 # --- READ (Lecture) ---
 def get_active_games(session: Session) -> List[TrackedGame]:
@@ -70,7 +78,6 @@ def delete_tracked_game(session: Session, game_id: int) -> bool:
 # =====================================================================
 #  SECTION : GESTION DE L'HISTORIQUE (PriceSnapshot)
 # =====================================================================
-
 # --- CREATE (Ajout) ---
 def create_price_snapshot(session: Session, game_id: int, price: float, offers: dict) -> PriceSnapshot:
     """
@@ -83,8 +90,6 @@ def create_price_snapshot(session: Session, game_id: int, price: float, offers: 
     return snapshot
 
 # --- READ (Lecture de l'historique) ---
-
-
 def get_game_price_history(session: Session, game_id: int) -> List[PriceSnapshot]:
     """
     Récupère tout l'historique des prix d'un jeu, du plus récent au plus ancien.

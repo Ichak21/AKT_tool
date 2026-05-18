@@ -192,3 +192,29 @@ def test_delete_game_cascade_snapshots(session: Session):
     # La table des snapshots doit être redevenue totalement vide !
     remaining_snapshots = session.exec(select(PriceSnapshot)).all()
     assert len(remaining_snapshots) == 0
+    
+def test_create_tracked_game_duplicate_raises_value_error(session: Session):
+    """
+    Vérifie que le CRUD lève bien une ValueError si on tente
+    d'insérer deux fois le même couple (title, platform).
+    """
+    # 1. Premier enregistrement : Tout doit bien se passer
+    game_1 = crud.create_tracked_game(
+        session=session, 
+        title="Cyberpunk 2077", 
+        platform="pc", 
+        slug="cyberpunk-2077"
+    )
+    assert game_1.id is not None
+
+    # 2. Tentative d'insertion du doublon exact : Pytest doit intercepter la ValueError
+    with pytest.raises(ValueError) as exc_info:
+        crud.create_tracked_game(
+            session=session, 
+            title="Cyberpunk 2077", 
+            platform="pc", 
+            slug="cyberpunk-2077"
+        )
+
+    # 3. Vérification que le message d'erreur est bien celui configuré dans le CRUD
+    assert "déjà suivi sur la plateforme 'PC'" in str(exc_info.value)
