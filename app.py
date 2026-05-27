@@ -190,7 +190,7 @@ def main():
     if len(sys.argv) > 1 and sys.argv[1] == "--cron":
         print("[WORKER] Lancement du scraping nocturne automatique...")
         try:
-            run_scan_loop()
+            action_run_scan_loop()
             print("[WORKER] Scraping terminé avec succès.")
             sys.exit(0) # Code 0 : Tout s'est bien passé, le conteneur s'éteint proprement
         except Exception as e:
