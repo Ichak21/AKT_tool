@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  # --- LA BASE DE DONNÉES ---
+  db:
+    image: postgres:15-alpine
+    container_name: akt_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: aks_user
+      POSTGRES_PASSWORD: aks_secure_password
+      POSTGRES_DB: allkeyshop_db
+    ports:
+      - "5432:5432" # Te permet d'y accéder depuis ton PC via DBeaver
+    volumes:
+      - postgres_data:/var/disk/postgres/data # Sécurise tes données sur ton Proxmox
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U akt_user -d akt_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # --- TON APPLICATION (WORKER / CLI) ---
+  akt_tool:
+    build: .
+    container_name: akt_app
+    depends_on:
+      db:
+        condition: service_healthy # L'app attend que Postgres soit prêt avant de démarrer
+    environment:
+      # Chaîne de connexion pointant directement vers le conteneur 'db'
+      - DATABASE_URL=postgresql://akt_user:akt_secure_password@db:5432/akt_db
+    volumes:
+      - .:/app # Permet de refléter tes changements de code sans tout reconstruire en dev

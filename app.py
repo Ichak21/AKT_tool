@@ -186,28 +186,39 @@ def main():
         "5": action_view_history,
     }
 
-    while True:
-        print("\n=====================================")
-        print("🎮 CONSOLE DE PILOTAGE - ATK TOOL v1")
-        print("=====================================")
-        print("1. Ajouter un jeu au catalogue")
-        print("2. Activer / Désactiver le scan d'un jeu")
-        print("3. Supprimer un jeu du catalogue (et son historique)")
-        print("4. Lancer la boucle de mise à jour (Scan Allkeyshop)")
-        print("5. Consulter l'historique des prix d'un jeu")
-        print("6. Quitter")
-        print("=====================================")
-        
-        choice = input("Votre choix (1-6) : ").strip()
-        
-        if choice == "6":
-            print("👋 Fermeture de l'application.")
-            break
-        elif choice in menu_actions:
-            # Exécution propre de l'action choisie
-            menu_actions[choice]()
-        else:
-            print("⚠️ Choix invalide. Entrez un chiffre entre 1 et 6.")
+    # Vérifie si on a passé l'argument '--cron' lors du lancement
+    if len(sys.argv) > 1 and sys.argv[1] == "--cron":
+        print("[WORKER] Lancement du scraping nocturne automatique...")
+        try:
+            run_scan_loop()
+            print("[WORKER] Scraping terminé avec succès.")
+            sys.exit(0) # Code 0 : Tout s'est bien passé, le conteneur s'éteint proprement
+        except Exception as e:
+            print(f"[WORKER CRITICAL ERROR] Le scraping a échoué : {e}")
+            sys.exit(1) # Code 1 : Erreur, Docker le saura
+    else:        
+        while True:
+            print("\n=====================================")
+            print("🎮 CONSOLE DE PILOTAGE - ATK TOOL v1")
+            print("=====================================")
+            print("1. Ajouter un jeu au catalogue")
+            print("2. Activer / Désactiver le scan d'un jeu")
+            print("3. Supprimer un jeu du catalogue (et son historique)")
+            print("4. Lancer la boucle de mise à jour (Scan Allkeyshop)")
+            print("5. Consulter l'historique des prix d'un jeu")
+            print("6. Quitter")
+            print("=====================================")
+            
+            choice = input("Votre choix (1-6) : ").strip()
+            
+            if choice == "6":
+                print("👋 Fermeture de l'application.")
+                break
+            elif choice in menu_actions:
+                # Exécution propre de l'action choisie
+                menu_actions[choice]()
+            else:
+                print("⚠️ Choix invalide. Entrez un chiffre entre 1 et 6.")
 
 
 if __name__ == "__main__":

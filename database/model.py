@@ -1,13 +1,14 @@
 from datetime import datetime, timezone
 from typing import Optional, Dict, Any
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, SQLModel, UniqueConstraint
 from sqlalchemy import Column, JSON
 from sqlalchemy.dialects.postgresql import JSONB
 
 
 class TrackedGame(SQLModel, table=True):
     __tablename__: str = "tracked_games"
-
+    __table_args__ = (UniqueConstraint("title", "platform", name="unique_game_platform"),)
+    
     id: Optional[int] = Field(default=None, primary_key=True)
     title: str = Field(nullable=False)
     platform: str = Field(nullable=False)
