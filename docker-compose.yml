@@ -30,3 +30,5 @@ services:
     environment:
       # Chaîne de connexion pointant directement vers le conteneur 'db'
       - DATABASE_URL=postgresql://akt_user:akt_secure_password@db:5432/akt_db
+volumes:
+  postgres_data:
